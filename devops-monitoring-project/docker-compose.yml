@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+
+  app:
+    build: ./app
+    container_name: monitoring-app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development   
+    restart: unless-stopped
+    networks:
+      - monitoring-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - monitoring-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - monitoring-net
+
+volumes:
+  grafana-storage:
+
+networks:
+  monitoring-net:
+    driver: bridge

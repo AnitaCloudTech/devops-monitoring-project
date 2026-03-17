@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "anita-monitoring-app"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                echo "🔄 Cloning AnitaCloudTech repository..."
+                git branch: 'main',
+                    url: 'https://github.com/AnitaCloudTech/devops-monitoring-project.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "🐳 Building Docker image..."
+                sh 'docker build -t anita-monitoring-app:latest ./app'
+            }
+        }
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                echo "🚀 Deploying stack..."
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d --build'
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo "📊 Checking running containers..."
+                sh 'docker ps'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ AnitaCloudTech pipeline successful!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs."
+        }
+    }
+}
